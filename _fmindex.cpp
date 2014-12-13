@@ -41,11 +41,12 @@ int queryindices(string index_file, vector<vector<int> > queries,
 	for (size_t i = 0; i < queries.size(); ++i) {
 		query = queries[i];
 		m = query.size();
-		// FIXME: convert this
-		// vector<int> locations = sdsl::locate(
-		// 		index, query.begin(), query.begin() + m);
-		// result.push_back(locations);
-		// result.push_back(wordno2sentno[locations[i]]);
+		size_t cnt = sdsl::count(
+				index, query.begin(), query.end());
+		auto locations = sdsl::locate(
+				index, query.begin(), query.begin() + m);
+		for (size_t j = 0; j < cnt; ++j)
+			result[i].push_back(locations[j]);
 	}
 	return 0;
 }

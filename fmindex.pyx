@@ -2,20 +2,26 @@
 
 Converts space-separated tokens to integer indices."""
 
-from array import array
+from bisect import bisect
 from tempfile import NamedTemporaryFile
 
 cdef class Corpus:
-	def __init__(self):
+	def __init__(self, files=None):
 		self.token2id = {None: 0, '_UNK': 1, '_START': 2}
 		self.id2token = [None, '_UNK', '_START']
 		self.tmpfiles = []
+		if files:
+			for filename in files:
+				self.addfile(filename)
 
 	def addfile(self, filename):
+		"""Add a text file and index it."""
 		cdef vector[int] vec
+		self.sentidx = []
 		# encode texts as int arrays
 		for line in open(filename):
 			vec.push_back(2)
+			self.sentidx.append(vec.size())
 			for token in line.split():
 				if token not in self.token2id:
 					self.token2id[token] = len(self.token2id)
@@ -26,16 +32,14 @@ cdef class Corpus:
 		self.tmpfiles.append((filename, tmp))
 		makeindex(vec, tmp.name)
 
-	def query(self, list queries, bint indices=False, int limit=0):
+	def counts(self, list queries):
 		"""Perform a series of queries on each file and return counts.
 
 		:param queries: a list of strings.
-		:param indices: if True, return lists of indices instead of counts.
-		:return: a dictionary of dictionaries, e.g.:
+		:returns: a dictionary of dictionaries, e.g.:
 			{'file1': {'query1': 23, 'query2': 45}, ...}
 		"""
 		cdef vector[vector[int]] queryvec
-		cdef vector[vector[int]] resindices
 		cdef vector[int] rescounts
 		cdef vector[int] vec
 		cdef dict result = {filename: {} for filename, _ in self.tmpfiles}
@@ -43,19 +47,36 @@ cdef class Corpus:
 			vec = [self.token2id.get(token, 1) for token in query.split()]
 			queryvec.push_back(vec)
 		for filename, tmp in self.tmpfiles:
-			if indices:
-				raise NotImplementedError
-				if queryindices(tmp.name, queryvec, resindices) != 0:
-					raise ValueError('error loading index %s %s' % (
-							filename, tmp.name))
-				for query, vec in zip(queries, resindices):
-					result[filename][query] = list(vec)
-				resindices.clear()
-			else:
-				if querycounts(tmp.name, queryvec, rescounts) != 0:
-					raise ValueError('error loading index %s %s' % (
-							filename, tmp.name))
-				for query, cnt in zip(queries, rescounts):
-					result[filename][query] = cnt
-				rescounts.clear()
+			if querycounts(tmp.name, queryvec, rescounts) != 0:
+				raise ValueError('error loading index %s %s' % (
+						filename, tmp.name))
+			for query, cnt in zip(queries, rescounts):
+				result[filename][query] = cnt
+			rescounts.clear()
+		return result
+
+	def indices(self, list queries, bint indices=False, int limit=0):
+		"""Perform a series of queries on each file and return indices.
+
+		:param queries: a list of strings.
+		:returns: lists of 1-based sentence indices (line numbers), in the form
+			of a dictionary of dictionaries with lists, e.g.:
+			{'file1': {'query1': [1, 4], 'query2': [2, 7, 9]}, ...}
+		"""
+		cdef vector[vector[int]] queryvec
+		cdef vector[vector[int]] resindices
+		cdef vector[int] vec
+		cdef dict result = {filename: {} for filename, _ in self.tmpfiles}
+		for query in queries:
+			vec = [self.token2id.get(token, 1) for token in query.split()]
+			queryvec.push_back(vec)
+		for filename, tmp in self.tmpfiles:
+			resindices.resize(len(queries))
+			if queryindices(tmp.name, queryvec, resindices) != 0:
+				raise ValueError('error loading index %s %s' % (
+						filename, tmp.name))
+			for query, vec in zip(queries, resindices):
+				result[filename][query] = [
+						bisect(self.sentidx, n) for n in sorted(vec)]
+			resindices.clear()
 		return result

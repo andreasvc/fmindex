@@ -14,8 +14,7 @@ c = fmindex.Corpus()
 for filename in sys.argv[2:]:
 	c.addfile(filename)
 queries = open(sys.argv[1]).read().splitlines()
-result = pandas.DataFrame(c.query(queries),
+result = pandas.DataFrame(c.counts(queries),
 		index=queries,
 		columns=sys.argv[2:]).T
-for a, b in zip(sys.argv[2:], result.sum(axis=1)):
-	print('%s:%d' % (a, b))
+result.to_csv(sys.stdout)

@@ -5,7 +5,6 @@ from distutils.extension import Extension
 try:
 	from Cython.Build import cythonize
 	from Cython.Distutils import build_ext
-	from Cython.Compiler import Options
 	havecython = True
 except ImportError as err:
 	print(err)
@@ -59,9 +58,9 @@ if __name__ == '__main__':
 				language='c++',
 				extra_compile_args=['-O3', '-std=c++11'],  # ['-g', '-O0'],
 				# extra_link_args=[],
-				libraries = ['sdsl', 'divsufsort', 'divsufsort64'],
-				library_dirs = [os.environ['HOME'] + '/.local/lib'],
-				include_dirs = [os.environ['HOME'] + '/.local/include'],
+				libraries=['sdsl', 'divsufsort', 'divsufsort64'],
+				library_dirs=[os.environ['HOME'] + '/.local/lib'],
+				include_dirs=[os.environ['HOME'] + '/.local/include'],
 				)]
 		setup(
 				cmdclass=dict(build_ext=build_ext),

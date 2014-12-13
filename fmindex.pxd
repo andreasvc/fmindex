@@ -1,4 +1,3 @@
-from cpython.array cimport array
 from libcpp.vector cimport vector
 from libcpp.string cimport string
 
@@ -16,3 +15,4 @@ cdef class Corpus:
 	cdef dict token2id
 	cdef list id2token
 	cdef list tmpfiles
+	cdef list sentidx
