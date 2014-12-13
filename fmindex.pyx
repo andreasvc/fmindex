@@ -55,7 +55,7 @@ cdef class Corpus:
 			rescounts.clear()
 		return result
 
-	def indices(self, list queries, bint indices=False, int limit=0):
+	def indices(self, list queries, bint indices=False):
 		"""Perform a series of queries on each file and return indices.
 
 		:param queries: a list of strings.
@@ -80,3 +80,6 @@ cdef class Corpus:
 						bisect(self.sentidx, n) for n in sorted(vec)]
 			resindices.clear()
 		return result
+
+
+__all__ = ['Corpus']
