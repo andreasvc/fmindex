@@ -9,9 +9,12 @@ This is a Python wrapper around
 to a corpus of text files. This module provides an efficient method of perform
 a large number of substring searches.
 
-Expects texts to be tokenized, one sentence per line, tokens space-separated.
-Converts space-separated tokens to integer indices (i.e., words are never
-matched partially).
+Both a character-based and a word-based version is available.
+The character-based version offers full-text search.
+The word-based version converts each space-separated token to an integer
+(i.e., words are never matched partially).
+This works best for texts which are tokenized, one sentence per line, with
+space-separated tokens.
 
 Example
 -------
