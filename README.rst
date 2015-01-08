@@ -6,8 +6,11 @@ array that offers fast substring queries.
 
 This is a Python wrapper around
 `sdsl-lite <https://github.com/simongog/sdsl-lite>`_ to provide an FM-Index
-to a corpus of text files. This module provides an efficient method of perform
-a large number of substring searches.
+to a corpus of text files. This module provides an efficient method for performing
+a large number (say 10,000) of substring searches. For performing less than a
+1000 substring searches on a corpus, it is better to use the Aho-Corasick
+algorithm, as used by ``fgrep``, and the ``acora`` python module,
+cf. https://github.com/scoder/acora
 
 Both a character-based and a word-based version is available.
 The character-based version offers full-text search.
