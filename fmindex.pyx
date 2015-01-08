@@ -23,7 +23,7 @@ cdef class WordIndex:
 		for line in open(filename):
 			vec.push_back(2)
 			self.sentidx.append(vec.size())
-			for token in line.strip().split():
+			for token in line.split():
 				if token not in self.token2id:
 					self.token2id[token] = len(self.token2id)
 					self.id2token.append(token)
