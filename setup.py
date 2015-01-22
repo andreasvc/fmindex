@@ -52,12 +52,14 @@ directives = {
 
 if __name__ == '__main__':
 	if havecython:
+		os.environ['GCC_COLORS'] = 'auto'
 		extensions = [Extension(
 				'*',
 				sources=['*.pyx', '_fmindex.cpp'],
 				language='c++',
-				extra_compile_args=['-O3', '-std=c++11'],  # ['-g', '-O0'],
-				# extra_link_args=[],
+				extra_compile_args=['-O3', '-std=c++11'],
+				# extra_compile_args=['-O3', '-std=c++11', '-g', '-O0'],
+				# extra_link_args=['-g'],
 				libraries=['sdsl', 'divsufsort', 'divsufsort64'],
 				library_dirs=[os.environ['HOME'] + '/.local/lib'],
 				include_dirs=[os.environ['HOME'] + '/.local/include'],
