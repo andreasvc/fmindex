@@ -2,13 +2,8 @@
 import os
 from distutils.core import setup
 from distutils.extension import Extension
-try:
-	from Cython.Build import cythonize
-	from Cython.Distutils import build_ext
-	havecython = True
-except ImportError as err:
-	print(err)
-	havecython = False
+from Cython.Build import cythonize
+from Cython.Distutils import build_ext
 
 metadata = dict(name='fmindex',
 		version='0.1pre1',
@@ -51,30 +46,26 @@ directives = {
 		}
 
 if __name__ == '__main__':
-	if havecython:
-		os.environ['GCC_COLORS'] = 'auto'
-		extensions = [Extension(
-				'*',
-				sources=['*.pyx', '_fmindex.cpp'],
-				language='c++',
-				extra_compile_args=['-O3', '-std=c++11'],
-				# extra_compile_args=['-O3', '-std=c++11', '-g', '-O0'],
-				# extra_link_args=['-g'],
-				libraries=['sdsl', 'divsufsort', 'divsufsort64'],
-				library_dirs=[os.environ['HOME'] + '/.local/lib'],
-				include_dirs=[os.environ['HOME'] + '/.local/include'],
-				)]
-		setup(
-				cmdclass=dict(build_ext=build_ext),
-				ext_modules=cythonize(
-						extensions,
-						annotate=True,
-						compiler_directives=directives,
-						# nthreads=4,
-						# language_level=3,
-				),
-				# test_suite = 'tests'
-				**metadata)
-	else:
-		setup(**metadata)
-		print('\nWarning: Cython not found.\n')
+	os.environ['GCC_COLORS'] = 'auto'
+	extensions = [Extension(
+			'*',
+			sources=['*.pyx', '_fmindex.cpp'],
+			language='c++',
+			extra_compile_args=['-O3', '-std=c++11'],
+			# extra_compile_args=['-O0', '-std=c++11', '-g'],
+			# extra_link_args=['-g'],
+			libraries=['sdsl', 'divsufsort', 'divsufsort64'],
+			library_dirs=[os.environ['HOME'] + '/.local/lib'],
+			include_dirs=[os.environ['HOME'] + '/.local/include'],
+			)]
+	setup(
+			cmdclass=dict(build_ext=build_ext),
+			ext_modules=cythonize(
+					extensions,
+					annotate=True,
+					compiler_directives=directives,
+					language_level=3,
+					# nthreads=4,
+			),
+			# test_suite = 'tests'
+			**metadata)

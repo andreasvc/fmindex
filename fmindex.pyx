@@ -9,8 +9,9 @@ cdef class WordIndex:
 	def __cinit__(self):
 		self._ptr = NULL
 
-	def __init__(self, files):
+	def __init__(self, files, encoding='utf8'):
 		self.files = files
+		self.encoding = encoding
 		self._ptr = new _fmindex.WordIndex(files)
 
 	def __dealloc__(self):
@@ -25,7 +26,9 @@ cdef class WordIndex:
 			{'file1': {'query1': 23, 'query2': 45}, ...}
 		"""
 		cdef vector[vector[int]] result
-		self._ptr.count([query.split() for query in queries], result)
+		self._ptr.count(
+				[query.encode(self.encoding).split() for query in queries],
+				result)
 		return {filename:
 				{query: cnt for query, cnt in zip(queries, b)}
 				for filename, b in zip(self.files, result)}
@@ -39,12 +42,14 @@ cdef class WordIndex:
 			{'file1': {'query1': [1, 4], 'query2': [2, 7, 9]}, ...}
 		"""
 		cdef vector[vector[vector[int]]] result
-		self._ptr.locate([query.split() for query in queries], result)
+		self._ptr.locate(
+				[query.encode(self.encoding).split() for query in queries],
+				result)
 		return {filename:
 				{query: indices for query, indices in zip(queries, b)}
 				for filename, b in zip(self.files, result)}
 
-	def extract(self, str filename, int sentno):
+	def extract(self, filename, int sentno):
 		"""Extract a sentence from the index.
 
 		:param filename: one of the filenames as passed to __init__().
@@ -52,15 +57,17 @@ cdef class WordIndex:
 		:returns: the requested line.
 		"""
 		cdef int fileno = self.files.index(filename)
-		return self._ptr.extract(fileno, sentno)
+		result = self._ptr.extract(fileno, sentno)
+		return bytes(result).decode(self.encoding)
 
 
 cdef class CharIndex:
 	def __cinit__(self):
 		self._ptr = NULL
 
-	def __init__(self, files):
+	def __init__(self, files, encoding='utf8'):
 		self.files = files
+		self.encoding = encoding
 		self._ptr = new _fmindex.CharIndex(files)
 
 	def __dealloc__(self):
@@ -75,7 +82,8 @@ cdef class CharIndex:
 			{'file1': {'query1': 23, 'query2': 45}, ...}
 		"""
 		cdef vector[vector[int]] result
-		self._ptr.count(queries, result)
+		self._ptr.count(
+				[query.encode(self.encoding) for query in queries], result)
 		return {filename:
 				{query: count for query, count in zip(queries, b)}
 				for filename, b in zip(self.files, result)}
@@ -89,12 +97,13 @@ cdef class CharIndex:
 			{'file1': {'query1': [1, 4], 'query2': [2, 7, 9]}, ...}
 		"""
 		cdef vector[vector[vector[int]]] result
-		self._ptr.locate(queries, result)
+		self._ptr.locate(
+				[query.encode(self.encoding) for query in queries], result)
 		return {filename:
 				{query: indices for query, indices in zip(queries, b)}
 				for filename, b in zip(self.files, result)}
 
-	def extract(self, str filename, int sentno):
+	def extract(self, filename, int sentno):
 		"""Extract a sentence from the index.
 
 		:param filename: one of the filenames as passed to __init__().
@@ -102,7 +111,8 @@ cdef class CharIndex:
 		:returns: the requested line.
 		"""
 		cdef int fileno = self.files.index(filename)
-		return self._ptr.extract(fileno, sentno)
+		result = self._ptr.extract(fileno, sentno)
+		return bytes(result).decode(self.encoding)
 
 
 __all__ = ['WordIndex', 'CharIndex']
