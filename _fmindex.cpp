@@ -54,7 +54,7 @@ WordIndex::WordIndex(vector<string> filenames) {
 				auto search = mapping.find(token);
 				if (search == mapping.end()) {
 					data[numtokens] = mapping.size();
-					mapping[token] = mapping.size();
+					mapping[token] = data[numtokens];
 				} else {
 					data[numtokens] = search->second;
 				}
@@ -86,18 +86,18 @@ WordIndex::WordIndex(vector<string> filenames) {
 		bv.resize(0);
 	}
 
-	revmapping.resize(mapping.size() + 1);  // FIXME why + 1
-	for (unordered_map<string, int>::iterator it = mapping.begin();
-			it != mapping.end(); ++it)
-		revmapping[it->second] = it->first;
+	revmapping.resize(mapping.size());
+	for(auto kv : mapping)
+		revmapping[kv.second] = kv.first;
 }
 
 
 void WordIndex::mapquery(vector<string> query, vector<int> &result) {
-	for (size_t i = 0; i < query.size(); ++i) {
-		auto search = mapping.find(query[i]);
+	result.reserve(query.size());
+	for (auto &token : query) {
+		auto search = mapping.find(token);
 		if (search == mapping.end())
-			result.push_back(UNK);  // unknown word, not part of mapping
+			result.push_back(UNK);  // unknown token, not part of mapping
 		else
 			result.push_back(search->second);
 	}
@@ -107,14 +107,17 @@ void WordIndex::mapquery(vector<string> query, vector<int> &result) {
 int WordIndex::count(
 		vector<vector<string> > queries,
 		vector<vector<int> > &result) {
+	vector<int> query;
 	result.resize(index.size());
 	for (size_t fileno = 0; fileno < result.size(); ++fileno) {
-		result[fileno].resize(queries.size());
-		for (size_t i = 0; i < queries.size(); ++i) {
-			vector<int> query;
-			mapquery(queries[i], query);
-			result[fileno][i] = sdsl::count(
-					index[fileno], query.begin(), query.end());
+		result[fileno].reserve(queries.size());
+		for (auto &orig : queries) {
+			if (orig.size() == 0)
+				continue;
+			mapquery(orig, query);
+			result[fileno].push_back(
+					sdsl::count(index[fileno], query.begin(), query.end()));
+			query.clear();
 		}
 	}
 	return 0;
@@ -124,17 +127,21 @@ int WordIndex::count(
 int WordIndex::locate(
 		vector<vector<string> > queries,
 		vector<vector<vector<int> > > &result) {
+	vector<int> query;
 	result.resize(index.size());
 	for (size_t fileno = 0; fileno < result.size(); ++fileno) {
 		result[fileno].resize(queries.size());
 		for (size_t i = 0; i < queries.size(); i++) {
-			vector<int> query;
+			if (queries[i].size() == 0)
+				continue;
 			mapquery(queries[i], query);
 			auto locations = sdsl::locate(
 					index[fileno], query.begin(), query.end());
-			sort(locations.begin(), locations.end());  // FIXME not needed
-			for (size_t j = 0; j < locations.size(); ++j) {
-				int lineno = lineindex_rank[fileno](locations[j]);
+			query.clear();
+			// sort(locations.begin(), locations.end());
+			result[fileno][i].reserve(locations.size());
+			for (auto &loc : locations) {
+				int lineno = lineindex_rank[fileno](loc);
 				result[fileno][i].push_back(lineno);
 			}
 		}
@@ -163,6 +170,16 @@ string WordIndex::extract(int fileno, int lineno) {
 }
 
 
+int WordIndex::numlines(int fileno) {
+	return lineindex_rank[fileno](index[fileno].size());
+}
+
+
+int WordIndex::numtokens(int fileno) {
+	return index[fileno].size();
+}
+
+
 CharIndex::CharIndex(vector<string> filenames) {
 	index.resize(filenames.size());
 	lineindex.resize(filenames.size());
@@ -177,7 +194,7 @@ CharIndex::CharIndex(vector<string> filenames) {
 
 		// create a bitvector with the locations of line endings in this file
 		while (getline(is, line)) {
-			numchars += line.size();
+			numchars += line.size() + 1;  // + 1 for line terminator
 			bv[numchars - 1] = 1;
 		}
 
@@ -198,8 +215,16 @@ int CharIndex::count(
 		vector<vector<int> > &result) {
 	result.resize(index.size());
 	for (size_t fileno = 0; fileno < result.size(); ++fileno) {
-		result[fileno].resize(queries.size());
+		result[fileno].reserve(queries.size());
+		for (auto &query : queries) {
+			if (query.size() == 0)
+				continue;
+			result[fileno].push_back(
+					sdsl::count(index[fileno], query.begin(), query.end()));
+		}
 		for (size_t i = 0; i < queries.size(); ++i) {
+			if (queries[i].size() == 0)
+				continue;
 			result[fileno][i] = sdsl::count(
 					index[fileno], queries[i].begin(), queries[i].end());
 		}
@@ -215,11 +240,14 @@ int CharIndex::locate(
 	for (size_t fileno = 0; fileno < result.size(); ++fileno) {
 		result[fileno].resize(queries.size());
 		for (size_t i = 0; i < queries.size(); ++i) {
+			if (queries[i].size() == 0)
+				continue;
 			auto locations = sdsl::locate(
 					index[fileno], queries[i].begin(), queries[i].end());
-			sort(locations.begin(), locations.end());  // FIXME not needed
-			for (size_t j = 0; j < locations.size(); ++j) {
-				int lineno = lineindex_rank[fileno](locations[j]);
+			// sort(locations.begin(), locations.end());
+			result[fileno][i].reserve(locations.size());
+			for (auto &loc : locations) {
+				int lineno = lineindex_rank[fileno](loc);
 				result[fileno][i].push_back(lineno);
 			}
 		}
@@ -230,12 +258,18 @@ int CharIndex::locate(
 
 string CharIndex::extract(int fileno, int lineno) {
 	int begin = lineindex_select[fileno](lineno) + 1;
-	int end;
-	if ((unsigned)lineno + 1 < lineindex_rank[fileno](index[fileno].size()))
-		end = lineindex_select[fileno](lineno + 1) - 1;
-	else
-		end = index[fileno].size() - 1;
-
+	int end = lineindex_select[fileno](lineno + 1) - 1;
 	auto tokens = sdsl::extract(index[fileno], begin, end);
 	return tokens;
+}
+
+
+int CharIndex::numlines(int fileno) {
+	return lineindex_rank[fileno](index[fileno].size());
+}
+
+
+int CharIndex::numtokens(int fileno) {
+	string space = " ";
+	return sdsl::count(index[fileno], space.begin(), space.end()) + numlines(fileno);
 }

@@ -12,7 +12,7 @@ a large number (say 10,000) of substring searches. For performing less than a
 algorithm, as used by ``fgrep``, and the ``acora`` python module,
 cf. https://github.com/scoder/acora
 
-Both a character-based and a word-based version is available.
+Both a character-based and a word-based version are available.
 The character-based version offers full-text search.
 The word-based version converts each space-separated token to an integer
 (i.e., words are never matched partially).
@@ -24,10 +24,10 @@ Example
 An example application shows how to perform a set of queries from a file
 against a number of files::
 
-    python cli.py <queries> <files>
+    python fmgrep.py <queries> <files>
 
-The result is similar to ``grep -c -f queries files``, although the
-counts will differ because grep counts multiple matches per line as a single
+The result is similar to ``fgrep -c -f queries files``, although the
+counts will differ because ``grep`` counts multiple matches per line as a single
 match.
 
 

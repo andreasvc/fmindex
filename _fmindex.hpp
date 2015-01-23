@@ -10,8 +10,8 @@ using namespace sdsl;
 
 // word-based index
 // typedef csa_wt<wt_int<rrr_vector<127> > > fm_index_word;
-// typedef csa_wt<wm_int<rrr_vector<127> > > fm_index_word;
-typedef csa_wt<wt_huff_int<rrr_vector<63> >, 64, 128 > fm_index_word;
+// typedef csa_wt<wt_huff_int<rrr_vector<63> >, 64, 128 > fm_index_word;
+typedef csa_wt<wm_int<rrr_vector<63> >, 64, 128 > fm_index_word;
 class WordIndex {
 	unordered_map<string, int> mapping;
 	vector<string> revmapping;
@@ -32,6 +32,8 @@ class WordIndex {
 				vector<vector<string> > queries,
 				vector<vector<vector<int> > > &result);
 		string extract(int fileno, int lineno);
+		int numlines(int fileno);
+		int numtokens(int fileno);
 };
 
 
@@ -53,6 +55,8 @@ class CharIndex {
 				vector<string> queries,
 				vector<vector<vector<int> > > &result);
 		string extract(int fileno, int lineno);
+		int numlines(int fileno);
+		int numtokens(int fileno);
 };
 
 #endif  /* FMINDEX_H */

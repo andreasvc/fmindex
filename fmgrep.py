@@ -3,6 +3,7 @@
 Usage: %s [--indices|--counts] [--fts] QUERYFILE FILE1...
 """
 from __future__ import print_function
+import io
 import sys
 import pandas
 import fmindex
@@ -25,8 +26,10 @@ if '--fts' in sys.argv:
 	c = fmindex.CharIndex(sys.argv[2:])
 else:
 	c = fmindex.WordIndex(sys.argv[2:])
+print('index ready', file=sys.stderr)
 
-queries = open(sys.argv[1]).read().splitlines()
+queries = [query for query in io.open(
+		sys.argv[1], encoding='utf8').read().splitlines() if query]
 if indices:
 	result = c.locate(queries)
 	for query in queries:
@@ -42,8 +45,6 @@ elif counts:
 else:  # print line number and matching line
 	result = c.locate(queries)
 	for query in queries:
-		print(query)
 		for filename in sys.argv[2:]:
 			for n in result[filename][query]:
 				print('%s:%d:%s' % (filename, n, c.extract(filename, n)))
-		print()

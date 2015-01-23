@@ -13,6 +13,8 @@ cdef extern from "_fmindex.hpp":
 				vector[vector[string]] queries,
 				vector[vector[vector[int]]] &result)
 		string extract(int fileno, int lineno)
+		int numtokens(int fileno)
+		int numlines(int fileno)
 
 	cppclass CharIndex:
 		# NB! std::bad_alloc will be converted to MemoryError
@@ -25,3 +27,5 @@ cdef extern from "_fmindex.hpp":
 				vector[string] queries,
 				vector[vector[vector[int]]] &result)
 		string extract(int fileno, int lineno)
+		int numtokens(int fileno)
+		int numlines(int fileno)
