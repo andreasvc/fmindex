@@ -104,6 +104,26 @@ void WordIndex::mapquery(vector<string> query, vector<int> &result) {
 }
 
 
+int WordIndex::countsum(
+		vector<vector<string> > queries,
+		vector<int> &result) {
+	vector<int> query;
+	result.resize(index.size());
+	for (size_t fileno = 0; fileno < result.size(); ++fileno) {
+		result[fileno] = 0;
+		for (auto &orig : queries) {
+			if (orig.size() == 0)
+				continue;
+			mapquery(orig, query);
+			result[fileno] += sdsl::count(
+					index[fileno], query.begin(), query.end());
+			query.clear();
+		}
+	}
+	return 0;
+}
+
+
 int WordIndex::count(
 		vector<vector<string> > queries,
 		vector<vector<int> > &result) {
@@ -222,12 +242,6 @@ int CharIndex::count(
 			result[fileno].push_back(
 					sdsl::count(index[fileno], query.begin(), query.end()));
 		}
-		for (size_t i = 0; i < queries.size(); ++i) {
-			if (queries[i].size() == 0)
-				continue;
-			result[fileno][i] = sdsl::count(
-					index[fileno], queries[i].begin(), queries[i].end());
-		}
 	}
 	return 0;
 }
@@ -261,6 +275,23 @@ string CharIndex::extract(int fileno, int lineno) {
 	int end = lineindex_select[fileno](lineno + 1) - 1;
 	auto tokens = sdsl::extract(index[fileno], begin, end);
 	return tokens;
+}
+
+
+int CharIndex::countsum(
+		vector<string> queries,
+		vector<int> &result) {
+	result.resize(index.size());
+	for (size_t fileno = 0; fileno < result.size(); ++fileno) {
+		result[fileno] = 0;
+		for (auto &query : queries) {
+			if (query.size() == 0)
+				continue;
+			result[fileno] += sdsl::count(
+					index[fileno], query.begin(), query.end());
+		}
+	}
+	return 0;
 }
 
 

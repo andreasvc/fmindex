@@ -13,6 +13,9 @@ cdef extern from "_fmindex.hpp":
 				vector[vector[string]] queries,
 				vector[vector[vector[int]]] &result)
 		string extract(int fileno, int lineno)
+		int countsum(
+				vector[vector[string]] queries,
+				vector[int] &result)
 		int numtokens(int fileno)
 		int numlines(int fileno)
 
@@ -27,5 +30,8 @@ cdef extern from "_fmindex.hpp":
 				vector[string] queries,
 				vector[vector[vector[int]]] &result)
 		string extract(int fileno, int lineno)
+		int countsum(
+				vector[string] queries,
+				vector[int] &result)
 		int numtokens(int fileno)
 		int numlines(int fileno)

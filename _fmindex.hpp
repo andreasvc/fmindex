@@ -32,6 +32,9 @@ class WordIndex {
 				vector<vector<string> > queries,
 				vector<vector<vector<int> > > &result);
 		string extract(int fileno, int lineno);
+		int countsum(
+				vector<vector<string> > queries,
+				vector<int> &result);
 		int numlines(int fileno);
 		int numtokens(int fileno);
 };
@@ -55,6 +58,9 @@ class CharIndex {
 				vector<string> queries,
 				vector<vector<vector<int> > > &result);
 		string extract(int fileno, int lineno);
+		int countsum(
+				vector<string> queries,
+				vector<int> &result);
 		int numlines(int fileno);
 		int numtokens(int fileno);
 };

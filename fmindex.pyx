@@ -36,6 +36,13 @@ cdef class Index:
 		:returns: the requested line.
 		"""
 
+	def countsum(self, list queries):
+		"""For each file, perform queries and return sum.
+
+		:param queries: a list of strings.
+		:returns: a dictionary of counts, e.g.: {'file1': 23, 'file2': 45, ...}
+		"""
+
 	def numlines(self):
 		"""Return a list with the number of lines in each file (corresponding
 		to the files passed to init)."""
@@ -82,6 +89,13 @@ cdef class WordIndex(Index):
 		result = self._ptr.extract(fileno, sentno)
 		return bytes(result).decode(self.encoding)
 
+	def countsum(self, list queries):
+		cdef vector[int] result
+		self._ptr.countsum(
+				[query.encode(self.encoding).split() for query in queries],
+				result)
+		return {filename: cnt for filename, cnt in zip(self.files, result)}
+
 	def numlines(self):
 		return [self._ptr.numlines(n) for n, _ in enumerate(self.files)]
 
@@ -123,6 +137,13 @@ cdef class CharIndex(Index):
 		cdef int fileno = self.files.index(filename)
 		result = self._ptr.extract(fileno, sentno)
 		return bytes(result).decode(self.encoding)
+
+	def countsum(self, list queries):
+		cdef vector[int] result
+		self._ptr.countsum(
+				[query.encode(self.encoding).split() for query in queries],
+				result)
+		return {filename: cnt for filename, cnt in zip(self.files, result)}
 
 	def numlines(self):
 		return [self._ptr.numlines(n) for n, _ in enumerate(self.files)]
